@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spaceboom - Asteroides Infinitos</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="top-bar">
+        <div>
+          <h1>Spaceboom</h1>
+          <p>Destrua asteroides infinitamente e suba no ranking global.</p>
+        </div>
+        <button id="loginButton" class="ghost">Login com Google</button>
+      </header>
+
+      <section class="hud">
+        <div>
+          <span class="label">Jogador</span>
+          <strong id="playerName">Visitante</strong>
+        </div>
+        <div>
+          <span class="label">Pontuação</span>
+          <strong id="score">0</strong>
+        </div>
+        <div>
+          <span class="label">Recorde</span>
+          <strong id="bestScore">0</strong>
+        </div>
+      </section>
+
+      <section class="game-panel">
+        <canvas id="gameCanvas" width="360" height="640"></canvas>
+        <div class="controls">
+          <p>
+            A nave atira automaticamente. Movimente a nave com o mouse, toque ou setas do teclado.
+          </p>
+        </div>
+      </section>
+
+      <section class="leaderboard">
+        <div class="leaderboard-header">
+          <h2>Ranking Global</h2>
+          <button id="submitScore" class="primary">Enviar pontuação</button>
+        </div>
+        <ol id="leaderboardList"></ol>
+        <p class="hint">
+          Este ranking é salvo localmente no navegador. Para um ranking global real, conecte a
+          aplicação a um backend com autenticação Google.
+        </p>
+      </section>
+    </main>
+
+    <script src="main.js"></script>
+  </body>
+</html>
