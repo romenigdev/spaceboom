@@ -32,6 +32,12 @@ body {
   flex-wrap: wrap;
 }
 
+.top-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .top-bar h1 {
   margin: 0 0 6px;
   font-size: 2rem;
@@ -115,6 +121,12 @@ body {
   color: #f5f7ff;
   cursor: pointer;
   font-weight: 600;
+}
+
+code {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 0.85em;
+  color: #b9c2ff;
 }
 
 .leaderboard ol {
