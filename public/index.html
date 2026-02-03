@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spaceboom - Asteroides Infinitos</title>
+    <link rel="stylesheet" href="styles.css" />
+    <meta name="google-signin-client_id" content="SUBSTITUA_PELO_CLIENT_ID.apps.googleusercontent.com" />
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+  </head>
+  <body data-google-client-id="SUBSTITUA_PELO_CLIENT_ID.apps.googleusercontent.com">
+    <main class="app">
+      <header class="top-bar">
+        <div>
+          <h1>Spaceboom</h1>
+          <p>Destrua asteroides infinitamente e suba no ranking global.</p>
+        </div>
+        <div class="top-actions">
+          <button id="muteButton" class="ghost">Som: Ligado</button>
+          <button id="loginButton" class="primary">Login com Google</button>
+        </div>
+      </header>
+
+      <section class="hud">
+        <div>
+          <span class="label">Jogador</span>
+          <strong id="playerName">Visitante</strong>
+        </div>
+        <div>
+          <span class="label">Pontuação</span>
+          <strong id="score">0</strong>
+        </div>
+        <div>
+          <span class="label">Recorde</span>
+          <strong id="bestScore">0</strong>
+        </div>
+      </section>
+
+      <section class="game-panel">
+        <canvas id="gameCanvas" width="360" height="640"></canvas>
+        <div class="controls">
+          <p>
+            A nave atira automaticamente. Movimente a nave com o mouse, toque ou setas do teclado.
+          </p>
+        </div>
+      </section>
+
+      <section class="leaderboard">
+        <div class="leaderboard-header">
+          <h2>Ranking Global</h2>
+          <button id="submitScore" class="primary">Enviar pontuação</button>
+        </div>
+        <ol id="leaderboardList"></ol>
+        <p class="hint">
+          Este ranking é salvo localmente no navegador. Para um ranking global real, conecte a
+          aplicação a um backend com autenticação Google.
+        </p>
+        <p class="hint">
+          Para o login real do Google, substitua o <code>SUBSTITUA_PELO_CLIENT_ID</code> pelo Client
+          ID do seu projeto no Google Cloud Console.
+        </p>
+      </section>
+    </main>
+
+    <script src="main.js"></script>
+  </body>
+</html>
