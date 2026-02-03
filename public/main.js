@@ -31,11 +31,9 @@ const state = {
   ship: {
     x: 0,
     y: -0.75,
-    z: 0,
-    width: 0.18,
-    height: 0.22,
+    width: 0.14,
+    height: 0.18,
     speed: 0.02,
-    rotation: 0,
   },
   bullets: [],
   asteroids: [],
@@ -101,12 +99,11 @@ const translations = {
 
 const shaderSource = {
   vertex: `
-    attribute vec3 a_position;
+    attribute vec2 a_position;
     attribute vec3 a_color;
-    uniform mat4 u_matrix;
     varying vec3 v_color;
     void main() {
-      gl_Position = u_matrix * vec4(a_position, 1.0);
+      gl_Position = vec4(a_position, 0.0, 1.0);
       v_color = a_color;
     }
   `,
@@ -124,15 +121,8 @@ const positionBuffer = gl.createBuffer();
 const colorBuffer = gl.createBuffer();
 const positionLocation = gl.getAttribLocation(program, "a_position");
 const colorLocation = gl.getAttribLocation(program, "a_color");
-const matrixLocation = gl.getUniformLocation(program, "u_matrix");
 
 const keys = new Set();
-
-const meshes = {
-  ship: createShipMesh(),
-  bullet: createBoxMesh(0.02, 0.08, 0.04),
-  asteroid: createAsteroidMesh(),
-};
 
 function createProgram(vertexSource, fragmentSource) {
   const vertexShader = compileShader(gl.VERTEX_SHADER, vertexSource);
@@ -181,42 +171,40 @@ function resetGame() {
   state.lastShot = 0;
   state.ship.x = 0;
   state.ship.y = -0.75;
-  state.ship.rotation = 0;
 }
 
 function addBullet() {
   state.bullets.push({
     x: state.ship.x,
     y: state.ship.y + state.ship.height / 2,
-    z: 0,
+    width: 0.02,
+    height: 0.07,
     speed: 0.05,
   });
   playShotSound();
 }
 
 function addAsteroid() {
-  const size = randomBetween(0.1, 0.18);
+  const size = randomBetween(0.08, 0.16);
   state.asteroids.push({
     x: randomBetween(-0.85, 0.85),
-    y: 1.2,
-    z: randomBetween(-0.3, 0.2),
+    y: 1.1,
     radius: size / 2,
+    width: size,
+    height: size,
     speed: randomBetween(0.006, 0.014),
     spin: randomBetween(-0.03, 0.03),
     rotation: randomBetween(0, Math.PI * 2),
-    mesh: createAsteroidMesh(),
-    scale: size,
   });
 }
 
-function addExplosion(x, y, z) {
-  for (let i = 0; i < 18; i += 1) {
+function addExplosion(x, y) {
+  for (let i = 0; i < 16; i += 1) {
     const angle = randomBetween(0, Math.PI * 2);
     const speed = randomBetween(0.01, 0.03);
     state.particles.push({
       x,
       y,
-      z,
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
       life: randomBetween(20, 40),
@@ -227,10 +215,9 @@ function addExplosion(x, y, z) {
 }
 
 function initStars() {
-  state.stars = Array.from({ length: 140 }, () => ({
+  state.stars = Array.from({ length: 120 }, () => ({
     x: randomBetween(-1, 1),
     y: randomBetween(-1, 1),
-    z: randomBetween(-0.6, 0.2),
     speed: randomBetween(0.001, 0.004),
     size: randomBetween(0.004, 0.012),
   }));
@@ -246,7 +233,6 @@ function updateStars(delta) {
     if (star.y < -1.2) {
       star.y = 1.2;
       star.x = randomBetween(-1, 1);
-      star.z = randomBetween(-0.6, 0.2);
     }
   });
 }
@@ -257,7 +243,6 @@ function updateGame(delta) {
     (keys.has("ArrowRight") || keys.has("d") ? 1 : 0);
 
   state.ship.x = clamp(state.ship.x + moveX * state.ship.speed * delta, -0.9, 0.9);
-  state.ship.rotation = moveX * -0.2;
 
   state.lastShot += delta;
   if (state.lastShot > 10) {
@@ -274,7 +259,7 @@ function updateGame(delta) {
   state.bullets.forEach((bullet) => {
     bullet.y += bullet.speed * delta;
   });
-  state.bullets = state.bullets.filter((bullet) => bullet.y < 1.3);
+  state.bullets = state.bullets.filter((bullet) => bullet.y < 1.2);
 
   state.asteroids.forEach((asteroid) => {
     asteroid.y -= asteroid.speed * delta;
@@ -292,11 +277,11 @@ function updateGame(delta) {
   state.asteroids.forEach((asteroid) => {
     let destroyed = false;
     state.bullets.forEach((bullet) => {
-      if (isColliding(asteroid, bullet, asteroid.radius)) {
+      if (isColliding(asteroid, bullet)) {
         destroyed = true;
         bullet.y = 2;
         state.score += 10;
-        addExplosion(asteroid.x, asteroid.y, asteroid.z);
+        addExplosion(asteroid.x, asteroid.y);
       }
     });
     if (!destroyed) {
@@ -305,7 +290,7 @@ function updateGame(delta) {
   });
   state.asteroids = remainingAsteroids;
 
-  const shipHit = state.asteroids.some((asteroid) => isColliding(asteroid, state.ship, 0.12));
+  const shipHit = state.asteroids.some((asteroid) => isColliding(asteroid, state.ship));
   if (shipHit) {
     state.bestScore = Math.max(state.bestScore, state.score);
     bestScoreEl.textContent = state.bestScore;
@@ -316,10 +301,11 @@ function updateGame(delta) {
   updateHUD();
 }
 
-function isColliding(a, b, radius) {
-  const dx = a.x - b.x;
-  const dy = a.y - b.y;
-  return Math.sqrt(dx * dx + dy * dy) < radius;
+function isColliding(a, b) {
+  return (
+    Math.abs(a.x - b.x) < (a.width + b.width) / 2 &&
+    Math.abs(a.y - b.y) < (a.height + b.height) / 2
+  );
 }
 
 function updateHUD() {
@@ -329,245 +315,129 @@ function updateHUD() {
 
 function draw() {
   gl.clearColor(0.02, 0.04, 0.08, 1);
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  gl.enable(gl.DEPTH_TEST);
+  gl.clear(gl.COLOR_BUFFER_BIT);
 
   gl.useProgram(program);
   gl.enableVertexAttribArray(positionLocation);
   gl.enableVertexAttribArray(colorLocation);
 
-  const projection = createPerspectiveMatrix(60, canvas.width / canvas.height, 0.1, 10);
-  const view = createTranslationMatrix(0, 0, -3.2);
-
-  drawStars(projection, view);
-  drawShip(projection, view);
-  state.bullets.forEach((bullet) =>
-    drawMesh(meshes.bullet, projection, view, [bullet.x, bullet.y, 0], [0, 0, 0], 1, [0.9, 0.9, 0.2])
-  );
-  state.asteroids.forEach((asteroid) =>
-    drawMesh(
-      asteroid.mesh,
-      projection,
-      view,
-      [asteroid.x, asteroid.y, asteroid.z],
-      [asteroid.rotation, asteroid.rotation * 0.7, asteroid.rotation * 1.1],
-      asteroid.scale,
-      [0.7, 0.45, 0.6]
-    )
-  );
+  drawStars();
+  drawShip();
+  state.bullets.forEach((bullet) => drawRect(bullet, [0.9, 0.9, 0.2]));
+  state.asteroids.forEach((asteroid) => drawCircle(asteroid, [0.75, 0.45, 0.5]));
   state.particles.forEach((particle) =>
-    drawMesh(
-      meshes.bullet,
-      projection,
-      view,
-      [particle.x, particle.y, particle.z],
-      [0, 0, 0],
-      particle.size * 2,
+    drawRect(
+      {
+        x: particle.x,
+        y: particle.y,
+        width: particle.size,
+        height: particle.size,
+      },
       [1.0, 0.6, 0.2]
     )
   );
 }
 
-function drawStars(projection, view) {
+function drawStars() {
   state.stars.forEach((star) => {
-    drawMesh(
-      meshes.bullet,
-      projection,
-      view,
-      [star.x, star.y, star.z],
-      [0, 0, 0],
-      star.size,
+    drawRect(
+      {
+        x: star.x,
+        y: star.y,
+        width: star.size,
+        height: star.size * 1.6,
+      },
       [0.4, 0.6, 1.0]
     );
   });
 }
 
-function drawShip(projection, view) {
-  drawMesh(
-    meshes.ship,
-    projection,
-    view,
-    [state.ship.x, state.ship.y, 0],
-    [0, 0, state.ship.rotation],
-    1,
-    [0.2, 0.7, 1.0]
-  );
+function drawShip() {
+  const { x, y, width, height } = state.ship;
+  const halfWidth = width / 2;
+  const halfHeight = height / 2;
+  const positions = new Float32Array([
+    x,
+    y + halfHeight,
+    x - halfWidth,
+    y - halfHeight,
+    x + halfWidth,
+    y - halfHeight,
+  ]);
+
+  const colors = new Float32Array([
+    0.3, 0.9, 1.0,
+    0.1, 0.4, 0.9,
+    0.1, 0.4, 0.9,
+  ]);
+
+  drawShape(positions, colors);
 }
 
-function drawMesh(mesh, projection, view, position, rotation, scale, color) {
-  const model = createModelMatrix(position, rotation, scale);
-  const matrix = multiplyMatrices(projection, multiplyMatrices(view, model));
+function drawRect(entity, color) {
+  const x = entity.x;
+  const y = entity.y;
+  const halfWidth = entity.width / 2;
+  const halfHeight = entity.height / 2;
 
+  const positions = new Float32Array([
+    x - halfWidth,
+    y - halfHeight,
+    x + halfWidth,
+    y - halfHeight,
+    x - halfWidth,
+    y + halfHeight,
+    x - halfWidth,
+    y + halfHeight,
+    x + halfWidth,
+    y - halfHeight,
+    x + halfWidth,
+    y + halfHeight,
+  ]);
+
+  const colors = new Float32Array([
+    ...color,
+    ...color,
+    ...color,
+    ...color,
+    ...color,
+    ...color,
+  ]);
+
+  drawShape(positions, colors);
+}
+
+function drawCircle(entity, color) {
+  const segments = 18;
   const positions = [];
   const colors = [];
-  mesh.indices.forEach((index) => {
-    const vertex = mesh.vertices[index];
-    positions.push(vertex[0], vertex[1], vertex[2]);
-    colors.push(...applyColorVariation(color));
-  });
+  const { x, y, radius } = entity;
+  for (let i = 0; i < segments; i += 1) {
+    const angle = (i / segments) * Math.PI * 2;
+    const nextAngle = ((i + 1) / segments) * Math.PI * 2;
+    positions.push(
+      x,
+      y,
+      x + Math.cos(angle) * radius,
+      y + Math.sin(angle) * radius,
+      x + Math.cos(nextAngle) * radius,
+      y + Math.sin(nextAngle) * radius
+    );
+    colors.push(...color, ...color, ...color);
+  }
+  drawShape(new Float32Array(positions), new Float32Array(colors));
+}
 
-  gl.uniformMatrix4fv(matrixLocation, false, matrix);
-
+function drawShape(positions, colors) {
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-  gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
+  gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+  gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
   gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW);
   gl.vertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, 0);
 
-  gl.drawArrays(gl.TRIANGLES, 0, positions.length / 3);
-}
-
-function applyColorVariation(color) {
-  const variation = randomBetween(-0.08, 0.08);
-  return color.map((channel) => clamp(channel + variation, 0, 1));
-}
-
-function createShipMesh() {
-  const vertices = [
-    [0, 0.16, 0.18],
-    [-0.14, -0.12, 0.08],
-    [0.14, -0.12, 0.08],
-    [0, -0.16, -0.12],
-  ];
-  const indices = [0, 1, 2, 0, 2, 3, 0, 3, 1, 1, 3, 2];
-  return { vertices, indices };
-}
-
-function createAsteroidMesh() {
-  const vertices = [
-    [0, 0.18, 0],
-    [0.14, 0, 0.14],
-    [0, -0.18, 0],
-    [-0.14, 0, 0.14],
-    [0.14, 0, -0.14],
-    [-0.14, 0, -0.14],
-  ].map((vertex) => vertex.map((value) => value * randomBetween(0.9, 1.1)));
-  const indices = [
-    0, 1, 3,
-    0, 3, 5,
-    0, 5, 4,
-    0, 4, 1,
-    2, 1, 4,
-    2, 4, 5,
-    2, 5, 3,
-    2, 3, 1,
-  ];
-  return { vertices, indices };
-}
-
-function createBoxMesh(width, height, depth) {
-  const w = width / 2;
-  const h = height / 2;
-  const d = depth / 2;
-  const vertices = [
-    [-w, -h, -d],
-    [w, -h, -d],
-    [w, h, -d],
-    [-w, h, -d],
-    [-w, -h, d],
-    [w, -h, d],
-    [w, h, d],
-    [-w, h, d],
-  ];
-  const indices = [
-    0, 1, 2, 0, 2, 3,
-    4, 6, 5, 4, 7, 6,
-    0, 4, 5, 0, 5, 1,
-    1, 5, 6, 1, 6, 2,
-    2, 6, 7, 2, 7, 3,
-    3, 7, 4, 3, 4, 0,
-  ];
-  return { vertices, indices };
-}
-
-function createPerspectiveMatrix(fov, aspect, near, far) {
-  const f = 1 / Math.tan((fov * Math.PI) / 360);
-  const rangeInv = 1 / (near - far);
-  return new Float32Array([
-    f / aspect, 0, 0, 0,
-    0, f, 0, 0,
-    0, 0, (near + far) * rangeInv, -1,
-    0, 0, near * far * rangeInv * 2, 0,
-  ]);
-}
-
-function createTranslationMatrix(x, y, z) {
-  return new Float32Array([
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    x, y, z, 1,
-  ]);
-}
-
-function createRotationXMatrix(angle) {
-  const c = Math.cos(angle);
-  const s = Math.sin(angle);
-  return new Float32Array([
-    1, 0, 0, 0,
-    0, c, s, 0,
-    0, -s, c, 0,
-    0, 0, 0, 1,
-  ]);
-}
-
-function createRotationYMatrix(angle) {
-  const c = Math.cos(angle);
-  const s = Math.sin(angle);
-  return new Float32Array([
-    c, 0, -s, 0,
-    0, 1, 0, 0,
-    s, 0, c, 0,
-    0, 0, 0, 1,
-  ]);
-}
-
-function createRotationZMatrix(angle) {
-  const c = Math.cos(angle);
-  const s = Math.sin(angle);
-  return new Float32Array([
-    c, s, 0, 0,
-    -s, c, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1,
-  ]);
-}
-
-function createScaleMatrix(scale) {
-  return new Float32Array([
-    scale, 0, 0, 0,
-    0, scale, 0, 0,
-    0, 0, scale, 0,
-    0, 0, 0, 1,
-  ]);
-}
-
-function createModelMatrix(position, rotation, scale) {
-  const translation = createTranslationMatrix(position[0], position[1], position[2]);
-  const rotationX = createRotationXMatrix(rotation[0]);
-  const rotationY = createRotationYMatrix(rotation[1]);
-  const rotationZ = createRotationZMatrix(rotation[2]);
-  const scaleMatrix = createScaleMatrix(scale);
-  return multiplyMatrices(
-    translation,
-    multiplyMatrices(rotationZ, multiplyMatrices(rotationY, multiplyMatrices(rotationX, scaleMatrix)))
-  );
-}
-
-function multiplyMatrices(a, b) {
-  const result = new Float32Array(16);
-  for (let i = 0; i < 4; i += 1) {
-    for (let j = 0; j < 4; j += 1) {
-      result[i * 4 + j] =
-        a[i * 4 + 0] * b[0 * 4 + j] +
-        a[i * 4 + 1] * b[1 * 4 + j] +
-        a[i * 4 + 2] * b[2 * 4 + j] +
-        a[i * 4 + 3] * b[3 * 4 + j];
-    }
-  }
-  return result;
+  gl.drawArrays(gl.TRIANGLES, 0, positions.length / 2);
 }
 
 function gameLoop(now) {
@@ -787,9 +657,10 @@ function initGoogleAuth() {
 
 async function toggleFullscreen() {
   const text = translations[state.language];
+  const target = canvas;
   if (!document.fullscreenElement) {
     try {
-      await document.documentElement.requestFullscreen();
+      await target.requestFullscreen();
     } catch (error) {
       console.warn("Fullscreen indisponível", error);
     }
