@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spaceboom - Asteroides Infinitos</title>
+    <link rel="stylesheet" href="styles.css" />
+    <meta
+      name="google-signin-client_id"
+      content="838637643534-ppodbtklsms05i9a7cjhhr4bspbf74ob.apps.googleusercontent.com"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+  </head>
+  <body
+    class="min-h-screen bg-space text-slate-100"
+    data-google-client-id="838637643534-ppodbtklsms05i9a7cjhhr4bspbf74ob.apps.googleusercontent.com"
+    data-supabase-url=""
+    data-supabase-key=""
+  >
+    <main class="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-10">
+      <header class="flex flex-wrap items-center justify-between gap-6">
+        <div class="space-y-2">
+          <p id="tagline" class="text-sm uppercase tracking-[0.3em] text-cyan-300">Retro shooter</p>
+          <h1 class="text-4xl font-bold text-white drop-shadow-glow">Spaceboom</h1>
+          <p id="subtitle" class="max-w-xl text-sm text-slate-200">
+            Destrua asteroides infinitamente, marque pontos e suba no ranking global.
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <button
+            id="languageToggle"
+            class="rounded-full border border-cyan-400/60 px-4 py-2 text-xs uppercase tracking-[0.2em] text-cyan-100 transition hover:border-cyan-200"
+          >
+            PT-BR
+          </button>
+          <button
+            id="fullscreenButton"
+            class="rounded-full border border-emerald-400/60 px-4 py-2 text-xs uppercase tracking-[0.2em] text-emerald-100 transition hover:border-emerald-200"
+          >
+            Tela cheia
+          </button>
+          <button
+            id="muteButton"
+            class="rounded-full border border-indigo-400/60 px-4 py-2 text-xs uppercase tracking-[0.2em] text-indigo-100 transition hover:border-indigo-200"
+          >
+            Som: Ligado
+          </button>
+          <button
+            id="loginButton"
+            class="rounded-full bg-indigo-500 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-lg shadow-indigo-500/30 transition hover:bg-indigo-400"
+          >
+            Login com Google
+          </button>
+        </div>
+      </header>
+
+      <section class="grid gap-4 rounded-3xl border border-cyan-400/20 bg-slate-950/40 p-5 shadow-xl shadow-cyan-500/10">
+        <div class="grid gap-4 sm:grid-cols-3">
+          <div class="space-y-1">
+            <span class="text-xs uppercase tracking-[0.2em] text-cyan-300">Jogador</span>
+            <strong id="playerName" class="block text-lg text-white">Visitante</strong>
+          </div>
+          <div class="space-y-1">
+            <span class="text-xs uppercase tracking-[0.2em] text-cyan-300">Pontuação</span>
+            <strong id="score" class="block text-lg text-white">0</strong>
+          </div>
+          <div class="space-y-1">
+            <span class="text-xs uppercase tracking-[0.2em] text-cyan-300">Recorde</span>
+            <strong id="bestScore" class="block text-lg text-white">0</strong>
+          </div>
+        </div>
+        <p id="statusHint" class="text-xs text-slate-300"></p>
+      </section>
+
+      <section class="flex flex-col items-center gap-4">
+        <div class="relative">
+          <canvas id="gameCanvas" width="360" height="640" class="rounded-3xl"></canvas>
+          <button
+            id="startOverlay"
+            class="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-3xl bg-slate-950/70 text-center text-white backdrop-blur"
+          >
+            <span id="startTitle" class="text-xl font-semibold">Toque ou clique para começar</span>
+            <span id="startSubtitle" class="text-xs uppercase tracking-[0.2em] text-cyan-200">Auto-fire ativo</span>
+          </button>
+        </div>
+        <div class="max-w-xl text-center text-xs text-slate-300">
+          <p id="controlsHint">
+            A nave atira automaticamente. Use mouse, toque ou setas do teclado para se mover.
+          </p>
+          <p id="touchHint" class="mt-2 text-[11px] uppercase tracking-[0.2em] text-cyan-200">
+            Arraste o dedo na tela para mover a nave.
+          </p>
+        </div>
+      </section>
+
+      <section class="space-y-4 rounded-3xl border border-indigo-400/20 bg-slate-950/40 p-6 shadow-xl shadow-indigo-500/10">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h2 id="leaderboardTitle" class="text-lg font-semibold text-white">Ranking Global</h2>
+          <button
+            id="submitScore"
+            class="rounded-full bg-cyan-500 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-900 shadow-lg shadow-cyan-500/30 transition hover:bg-cyan-400"
+          >
+            Enviar pontuação
+          </button>
+        </div>
+        <ol id="leaderboardList" class="space-y-2 text-sm"></ol>
+        <div class="space-y-2 text-xs text-slate-300">
+          <p id="rankingHint">
+            Ranking global requer configurar Supabase. Sem isso, o ranking fica salvo localmente no
+            navegador.
+          </p>
+          <p id="rankingHint2">
+            Para ativar o ranking global, preencha <code>data-supabase-url</code> e
+            <code>data-supabase-key</code> no <code>&lt;body&gt;</code>.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <script src="main.js"></script>
+  </body>
+</html>
