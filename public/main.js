@@ -149,8 +149,9 @@ function compileShader(type, source) {
 
 function resizeCanvas() {
   const ratio = window.devicePixelRatio || 1;
-  const width = canvas.clientWidth * ratio;
-  const height = canvas.clientHeight * ratio;
+  const rect = canvas.getBoundingClientRect();
+  const width = rect.width * ratio;
+  const height = rect.height * ratio;
   if (canvas.width !== width || canvas.height !== height) {
     canvas.width = width;
     canvas.height = height;
@@ -777,4 +778,5 @@ resizeCanvas();
 loadGlobalLeaderboard().then(updateText);
 window.addEventListener("load", initGoogleAuth);
 document.addEventListener("fullscreenchange", updateText);
+document.addEventListener("fullscreenchange", resizeCanvas);
 requestAnimationFrame(gameLoop);
